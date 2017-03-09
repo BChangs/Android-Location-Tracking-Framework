@@ -1,4 +1,4 @@
-package bchang.iwtestapp;
+// Insert your package here : package.****;
 
 import android.content.Context;
 import android.content.Intent;
@@ -43,12 +43,10 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Start up activity, make sure screen stays on, setup layout, and button to stop tracking
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_collection);
-        getWindow().getDecorView().setBackgroundColor(Color.WHITE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-
         myB = (Button) findViewById(R.id.my_b);
         myB.setText("Stop Tracking");
 
@@ -56,10 +54,10 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
         setListeners();
 
         // Load in unique identifier if exists, create if not
+        // This identifier helps keep location data for each user seperated while also keeping them anonymous
         uid = "invalid";
         SharedPreferences sp = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         uid = sp.getString("uid", uid);
-
         if (uid.equals("invalid")) {
             uid = UUID.randomUUID().toString();
             SharedPreferences.Editor editor = sp.edit();
@@ -68,6 +66,7 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
         }
 
         // Setup calendar to get time and database to save data
+        // Note that you will have to have previously linked your application to your own firebase database
         final Calendar c = Calendar.getInstance();
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("Data");
@@ -75,7 +74,7 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
         DatabaseReference newListLoc = listLoc.push();
         newListLoc.setValue("Beginning of journey");
 
-        // Create an instance of GoogleAPIClient.
+        // Create an instance of GoogleAPIClient to be used in location tracking
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
@@ -85,7 +84,7 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
         }
         mGoogleApiClient.connect();
 
-        // Loop tracking
+        // Loop tracking to send data every 5 seconds, can change the value below to change time updates
         count = new CountDownTimer(5000, 1000) {
             public void onTick(long millisUntilFinished) {
             }
@@ -115,6 +114,7 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
     }
 
     private void setListeners() {
+        // End tracking when button is pressed
         myB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -124,19 +124,20 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
                 final DatabaseReference listLoc = myRef.child(uid);
                 DatabaseReference newListLoc = listLoc.push();
                 newListLoc.setValue("End of journey");
-                setContentView(R.layout.activity_main);
-                Intent intent = new Intent(Collection.this, MainActivity.class);
+                /*Optionally have it switch to new activity
+                setContentView(****);
+                Intent intent = new Intent(Collection.this, ****);
                 startActivity(intent);
-                finish();
+                finish();*/
             }
         });
     }
 
+    // Request location permission if needed
     public boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // No explanation needed, we can request the permission.
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
                     MY_PERMISSIONS_REQUEST_LOCATION);
@@ -146,6 +147,7 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
         }
     }
 
+    // Check permission request results and begin getting location if allowed
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
@@ -154,13 +156,12 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // location-related task you need to do.
+                    
+                    // permission was granted
                     if (ContextCompat.checkSelfPermission(this,
                             android.Manifest.permission.ACCESS_COARSE_LOCATION)
                             == PackageManager.PERMISSION_GRANTED) {
-
+                        
                         // Setup Location Manager to find GPS coordinates
                         lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(
                                 mGoogleApiClient);
@@ -169,28 +170,24 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
                             longitude = String.valueOf(lastKnownLocation.getLongitude());
                         }
                     }
-
-                } else {
-
-                    // permission denied
                 }
                 return;
             }
-
         }
     }
 
+    // When connected, setup location updates
     @Override
     public void onConnected(Bundle connectionHint) {
         LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(4000);
-        mLocationRequest.setFastestInterval(3000);
+        // Value in milliseconds for updating location
+        mLocationRequest.setInterval(2500);
+        mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
-
-
+        
         if (checkLocationPermission()) {
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -208,7 +205,6 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
 
     @Override
     public void onConnectionSuspended(int i) {
-
     }
 
     protected void onStart() {
@@ -223,7 +219,6 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
     }
 
     @Override
@@ -232,7 +227,7 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-
+                
                 lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(
                         mGoogleApiClient);
                 if (lastKnownLocation != null) {
