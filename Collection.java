@@ -179,25 +179,24 @@ public class Collection extends AppCompatActivity implements GoogleApiClient.Con
     // When connected, setup location updates
     @Override
     public void onConnected(Bundle connectionHint) {
-        LocationRequest mLocationRequest = new LocationRequest();
-        // Value in milliseconds for updating location
-        mLocationRequest.setInterval(2500);
-        mLocationRequest.setFastestInterval(2000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
-        
         if (checkLocationPermission()) {
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_COARSE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
+            LocationRequest mLocationRequest = new LocationRequest();
+            // Value in milliseconds for updating location
+            mLocationRequest.setInterval(2500);
+            mLocationRequest.setFastestInterval(2000);
+            mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-                lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+
+                    lastKnownLocation = LocationServices.FusedLocationApi.getLastLocation(
                         mGoogleApiClient);
-                if (lastKnownLocation != null) {
-                    latitude = String.valueOf(lastKnownLocation.getLatitude());
-                    longitude = String.valueOf(lastKnownLocation.getLongitude());
+                    if (lastKnownLocation != null) {
+                        latitude = String.valueOf(lastKnownLocation.getLatitude());
+                        longitude = String.valueOf(lastKnownLocation.getLongitude());
                 }
             }
         }
